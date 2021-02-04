@@ -1,0 +1,25 @@
+#!/bin/bash                                                                     
+# Use - Script to make a (non-sudo) user on server                                            
+# Auth - Srirag Vuppala                                                            
+# ----------------------------------------------------------------------------  
+
+# One liner to extract directory in which script is being run
+
+DIR=`pwd`
+
+# EUID = 0 when sudo is called
+if [[ $EUID == 0 ]]; then                                                        
+	read -p "Enter username : " USERNAME  
+	read -p "Enter public key name: " PUBLIC_KEY 
+	#"${PUBLIC_KEY:=$DEFAULT}"
+	adduser -m ${USERNAME}
+	# create .ssh folder and authorized_keys file with proper permissions
+	su - ${USERNAME} -c "umask 022; mkdir .ssh; echo $PUBLIC_KEY >> .ssh/authorized_keys" 
+	# copy over the public key file to the authorized_keys
+	su - -c "cp ${DIR}/${PUBLIC_KEY} /home/${USERNAME}/.ssh/authorized_keys"
+	echo "Your username is ${USERNAME} Thanks for joining us!"
+	exit 1                                                                      
+else                                                                            
+	echo "Only root may add a user to the server :("                              
+	exit 2                                                                      
+fi
